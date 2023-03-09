@@ -47,6 +47,40 @@ auto remove_parens(std::string s, int start) -> std::string {
     return s;
 }
 
+using mapping_t = std::map<char, std::string>;
+
+auto create_mapping(std::string args, std::string_view rest)
+  -> std::pair<mapping_t, std::string_view> {
+    auto mapping = mapping_t{};
+    auto j       = 0;
+    auto max     = [](auto a, auto b) { return std::max(a, b); };
+    auto letter  = std::accumulate(rest.cbegin(), rest.cend(), '`', max) + 1;
+
+    for (int i = 0; i < args.size(); ++i) {
+        if (j >= rest.size()) {
+            mapping[args[i]] = letter;
+            ++letter;
+        } else if (rest[j] != '(') {
+            mapping[args[i]] = rest.substr(j, 1);
+            ++j;
+        } else {
+            int const start  = j;
+            j                = find_end(j, rest) + 1;
+            mapping[args[i]] = rest.substr(start, j);
+        }
+    }
+
+    auto const left_over = j < rest.size() ? rest.substr(j, rest.size()) : ""sv;
+
+    return {mapping, left_over};
+}
+
+auto initial_substitution(std::string_view pattern, mapping_t& mapping) -> std::string {
+    return std::accumulate(pattern.begin(), pattern.end(), ""s, [&](auto acc, auto c) {
+        return acc + ((c == '(' or c == ')') ? std::string{c} : mapping[c]);
+    });
+}
+
 auto translate(std::string_view spelling) -> std::string {
     if (not dictionary.contains(spelling.front()))
         return "Missing from dictionary: "s + spelling.front();
@@ -57,47 +91,13 @@ auto translate(std::string_view spelling) -> std::string {
     auto const fn_abstract     = dictionary[combinator];
     auto const [args, pattern] = split(fn_abstract);
 
-    // STEP 1: create mapping
-    auto mapping = std::map<char, std::string>();
-
-    int j = 0;
-    char letter =
-      std::accumulate(
-        rest.cbegin(), rest.cend(), '`', [](auto a, auto b) { return std::max(a, b); }) +
-      1;
-
-    for (int i = 0; i < args.size(); ++i) {
-        if (j >= rest.size()) {
-            mapping[args[i]] = letter;
-            ++letter;
-        } else if (rest[j] != '(') {
-            mapping[args[i]] = rest.substr(j, 1);
-            ++j;
-        } else {
-            // deal within token (...)
-            int const start  = j;
-            j                = find_end(j, rest) + 1;
-            mapping[args[i]] = rest.substr(start, j);
-        }
-    }
-
-    auto const need_to_add = j < rest.size() ? rest.substr(j, rest.size()) : ""sv;
-
-    // STEP 2B) substitute
-    std::string sub = "";
-    for (auto const c : pattern) {
-        if (c == '(' or c == ')')
-            sub += c;
-        else
-            sub += mapping[c];
-    }
-
-    sub += need_to_add;
+    auto [mapping, left_over] = create_mapping(args, rest);
+    auto sub                  = initial_substitution(pattern, mapping) + std::string{left_over};
 
     while (sub.front() == '(') { sub = remove_parens(sub, 0); }
 
     // double left paren
-    auto dlp = [](auto &s) { return std::ranges::adjacent_find(s, _psi(_and_, _eq('('))); };
+    auto dlp = [](auto& s) { return std::ranges::adjacent_find(s, _psi(_and_, _eq('('))); };
 
     auto it = dlp(sub);
     while (it != sub.end()) {
