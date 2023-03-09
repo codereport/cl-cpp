@@ -81,19 +81,7 @@ auto initial_substitution(std::string_view pattern, mapping_t& mapping) -> std::
     });
 }
 
-auto translate(std::string_view spelling) -> std::string {
-    if (not dictionary.contains(spelling.front()))
-        return "Missing from dictionary: "s + spelling.front();
-
-    // STEP 2a) lookup pattern
-    auto const combinator      = spelling.front();
-    auto const rest            = spelling.substr(1, spelling.size());
-    auto const fn_abstract     = dictionary[combinator];
-    auto const [args, pattern] = split(fn_abstract);
-
-    auto [mapping, left_over] = create_mapping(args, rest);
-    auto sub                  = initial_substitution(pattern, mapping) + std::string{left_over};
-
+auto remove_all_parens(std::string sub) -> std::string {
     while (sub.front() == '(') { sub = remove_parens(sub, 0); }
 
     // double left paren
@@ -105,17 +93,33 @@ auto translate(std::string_view spelling) -> std::string {
         it  = dlp(sub);
     }
 
-    if (std::ranges::all_of(sub, _phi(::ispunct, _or_, ::islower))) return sub;
+    return sub;
+}
+
+auto translate(std::string_view spelling) -> std::string {
+    if (not dictionary.contains(spelling.front()))
+        return "Missing from dictionary: "s + spelling.front();
+
+    auto const combinator      = spelling.front();
+    auto const rest            = spelling.substr(1, spelling.size());
+    auto const fn_abstract     = dictionary[combinator];
+    auto const [args, pattern] = split(fn_abstract);
+
+    auto [mapping, left_over] = create_mapping(args, rest);
+    auto const init_sub       = initial_substitution(pattern, mapping) + std::string{left_over};
+    auto const final_sub      = remove_all_parens(init_sub);
 
     // fmt::print("➡️ {}\n", sub);
 
-    if (islower(sub.front())) {
-        auto const i   = sub.find('(');
-        auto const end = remove_parens(sub.substr(i, sub.size()), 0);
-        return sub.substr(0, i) + translate(end);
+    if (std::ranges::all_of(final_sub, _phi(::ispunct, _or_, ::islower))) return final_sub;
+
+    if (islower(final_sub.front())) {
+        auto const i   = final_sub.find('(');
+        auto const end = remove_parens(final_sub.substr(i, final_sub.size()), 0);
+        return final_sub.substr(0, i) + translate(end);
     }
 
-    return translate(sub);
+    return translate(final_sub);
 }
 
 auto unit_test(char combinator, std::string_view input, std::string_view expected) {
