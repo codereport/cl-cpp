@@ -44,7 +44,8 @@ auto remove_parens(std::string s, int start) -> std::string {
 }
 
 auto translate(std::string_view spelling) -> std::string {
-    if (not dictionary.contains(spelling.front())) return "Missing from dictionary: "s + spelling.front();
+    if (not dictionary.contains(spelling.front()))
+        return "Missing from dictionary: "s + spelling.front();
 
     // STEP 2a) lookup pattern
     auto const combinator      = spelling.front();
@@ -55,8 +56,11 @@ auto translate(std::string_view spelling) -> std::string {
     // STEP 1: create mapping
     auto mapping = std::map<char, std::string>();
 
-    int j       = 0;
-    char letter = std::accumulate(rest.cbegin(), rest.cend(), '`', [](auto a, auto b) { return std::max(a, b); }) + 1;
+    int j = 0;
+    char letter =
+      std::accumulate(
+        rest.cbegin(), rest.cend(), '`', [](auto a, auto b) { return std::max(a, b); }) +
+      1;
 
     for (int i = 0; i < args.size(); ++i) {
         if (j >= rest.size()) {
@@ -99,7 +103,9 @@ auto translate(std::string_view spelling) -> std::string {
         it  = dlp(sub);
     }
 
-    if (std::ranges::all_of(sub, [](auto e) { return ::ispunct(e) or ::islower(e); })) { return sub; }
+    if (std::ranges::all_of(sub, [](auto e) { return ::ispunct(e) or ::islower(e); })) {
+        return sub;
+    }
 
     // fmt::print("➡️ {}\n", sub);
 
