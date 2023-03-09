@@ -16,7 +16,9 @@ auto dictionary = std::map<char, std::string>  //
    {'K', "ab.a"},
    {'S', "abc.ac(bc)"},
    {'B', "abc.a(bc)"},
-   {'C', "abc.acb"}};
+   {'C', "abc.acb"},
+   {'R', "abc.bca"},
+   {'M', "a.aa"}};
 
 auto split(std::string s) -> std::pair<std::string, std::string> {
     auto const i = s.find(".");
@@ -126,7 +128,7 @@ auto main() -> int {
     unit_test('H', "BBB", "a(bcd)");       // H will be the B1
     unit_test('J', "B(BBB)B", "a(bcde)");  // J will be the B2
     // unit_test("S", "ac(bc)");
-    // unit_test('W', "C(BMR) ", "abb");
+    // unit_test('W', "C(BMR)", "abb");
     unit_test('C', "S(BBS)(KK)", "acb");
     unit_test('D', "BB", "ab(cd)");
 
@@ -134,15 +136,15 @@ auto main() -> int {
     auto const source = "BBSSKKIICC"s;
     auto mask         = "1100000000"s;
 
-    auto translations = std::map<std::string, std::set<std::string>>{};
+    // auto translations = std::map<std::string, std::set<std::string>>{};
 
-    while (std::prev_permutation(mask.begin(), mask.end())) {
-        auto s = ""s;
-        for (int i = 0; i < mask.size(); ++i) {
-            if (mask[i] == '1') s += source[i];
-        }
-        translations[translate(s)].insert(s);
-    }
+    // while (std::prev_permutation(mask.begin(), mask.end())) {
+    //     auto s = ""s;
+    //     for (int i = 0; i < mask.size(); ++i) {
+    //         if (mask[i] == '1') s += source[i];
+    //     }
+    //     translations[translate(s)].insert(s);
+    // }
 
-    for (auto [k, v] : translations) { fmt::print("{}: {} {}\n", k, v.size(), v); }
+    // for (auto [k, v] : translations) { fmt::print("{}: {} {}\n", k, v.size(), v); }
 }
