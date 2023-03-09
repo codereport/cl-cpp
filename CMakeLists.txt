@@ -17,6 +17,19 @@ if(NOT fmt_POPULATED)
   add_subdirectory(${fmt_SOURCE_DIR} ${fmt_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+# --- Fetch blackbird --------------------------------------------------------------
+
+FetchContent_Declare(blackbird
+  GIT_REPOSITORY https://github.com/codereport/blackbird
+  GIT_TAG main
+)
+
+FetchContent_GetProperties(blackbird)
+if(NOT blackbird_POPULATED)
+  FetchContent_Populate(blackbird)
+  add_subdirectory(${blackbird_SOURCE_DIR} ${blackbird_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
 # ------------------------------------------------------------------------------
 
 project(cl-cpp
@@ -28,6 +41,7 @@ project(cl-cpp
 add_executable(cl-cpp main.cpp)
 set_property(TARGET cl-cpp PROPERTY CXX_STANDARD 20)
 target_include_directories(cl-cpp PRIVATE src)
+include_directories(${blackbird_SOURCE_DIR})
 
 target_link_libraries(cl-cpp
 #   PRIVATE range-v3

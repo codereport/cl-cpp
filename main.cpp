@@ -8,6 +8,10 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
+#include <combinators.hpp>
+
+using namespace combinators;
+
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
@@ -93,9 +97,7 @@ auto translate(std::string_view spelling) -> std::string {
     while (sub.front() == '(') { sub = remove_parens(sub, 0); }
 
     // double left paren
-    auto dlp = [](auto &s) {
-        return std::ranges::adjacent_find(s, [](auto l, auto r) { return l == '(' and r == '('; });
-    };
+    auto dlp = [](auto &s) { return std::ranges::adjacent_find(s, _psi(_and_, _eq('('))); };
 
     auto it = dlp(sub);
     while (it != sub.end()) {
@@ -103,9 +105,7 @@ auto translate(std::string_view spelling) -> std::string {
         it  = dlp(sub);
     }
 
-    if (std::ranges::all_of(sub, [](auto e) { return ::ispunct(e) or ::islower(e); })) {
-        return sub;
-    }
+    if (std::ranges::all_of(sub, _phi(::ispunct, _or_, ::islower))) return sub;
 
     // fmt::print("➡️ {}\n", sub);
 
