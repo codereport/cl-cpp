@@ -93,9 +93,7 @@ auto translate(std::string_view spelling) -> std::string {
         return std::adjacent_find(s.begin(), s.end(), [](auto l, auto r) { return l == '(' and r == '('; });
     };
 
-    auto it      = dlp(sub);
-    auto const n = std::distance(sub.begin(), it) + 1;
-
+    auto it = dlp(sub);
     while (it != sub.end()) {
         sub = remove_parens(sub, std::distance(sub.begin(), it));
         it  = dlp(sub);
