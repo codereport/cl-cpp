@@ -39,7 +39,8 @@ project(cl-cpp
 
 
 add_executable(cl-cpp main.cpp)
-set_property(TARGET cl-cpp PROPERTY CXX_STANDARD 20)
+set_property(TARGET cl-cpp PROPERTY CXX_STANDARD 23)
+target_compile_options(cl-cpp PUBLIC -Werror -Wall -Wextra -Wpedantic -Wconversion)
 target_include_directories(cl-cpp PRIVATE src)
 include_directories(${blackbird_SOURCE_DIR})
 

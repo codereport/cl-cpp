@@ -29,8 +29,8 @@ auto split(std::string s) -> std::pair<std::string, std::string> {
     return {s.substr(0, i), s.substr(i + 1, s.size())};
 }
 
-auto find_end(int j, std::string_view s) {
-    int paren_count = 1;
+auto find_end(size_t j, std::string_view s) -> size_t {
+    int paren_count = 1.0;
     while (paren_count > 0) {
         ++j;
         if (s[j] == '(') ++paren_count;
@@ -39,7 +39,7 @@ auto find_end(int j, std::string_view s) {
     return j;
 }
 
-auto remove_parens(std::string s, int start) -> std::string {
+auto remove_parens(std::string s, size_t start) -> std::string {
     // ASSERT first char is '(' a(bc)d)
     s.erase(s.begin() + start);
     auto const i = find_end(start, s);
@@ -52,11 +52,11 @@ using mapping_t = std::map<char, std::string>;
 auto create_mapping(std::string args, std::string_view rest)
   -> std::pair<mapping_t, std::string_view> {
     auto mapping = mapping_t{};
-    auto j       = 0;
+    auto j       = 0uz;
     auto max     = [](auto a, auto b) { return std::max(a, b); };
-    auto letter  = std::accumulate(rest.cbegin(), rest.cend(), '`', max) + 1;
+    char letter  = std::accumulate(rest.cbegin(), rest.cend(), '`', max) + 1;
 
-    for (int i = 0; i < args.size(); ++i) {
+    for (size_t i = 0; i < args.size(); ++i) {
         if (j >= rest.size()) {
             mapping[args[i]] = letter;
             ++letter;
@@ -64,7 +64,7 @@ auto create_mapping(std::string args, std::string_view rest)
             mapping[args[i]] = rest.substr(j, 1);
             ++j;
         } else {
-            int const start  = j;
+            auto const start = j;
             j                = find_end(j, rest) + 1;
             mapping[args[i]] = rest.substr(start, j);
         }
