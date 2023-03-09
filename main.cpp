@@ -90,7 +90,7 @@ auto translate(std::string_view spelling) -> std::string {
 
     // double left paren
     auto dlp = [](auto &s) {
-        return std::adjacent_find(s.begin(), s.end(), [](auto l, auto r) { return l == '(' and r == '('; });
+        return std::ranges::adjacent_find(s, [](auto l, auto r) { return l == '(' and r == '('; });
     };
 
     auto it = dlp(sub);
