@@ -141,18 +141,34 @@ auto main() -> int {
     unit_test('D', "BB", "ab(cd)");
 
     // TODO: make this more sophisticated
-    auto const source = "BBSSKKIICC"s;
-    auto mask         = "1100000000"s;
+    auto translations = std::map<std::string, std::set<std::string>>{};
+    auto const source = "BBSSKKCC"s;
 
-    // auto translations = std::map<std::string, std::set<std::string>>{};
+    // TODO: figure out what is wrong with i <= 5
+    for (size_t i = 2; i <= 4; ++i) {
+        auto mask = std::string(i, '1') + std::string(source.size() - i, '0');
 
-    // while (std::prev_permutation(mask.begin(), mask.end())) {
-    //     auto s = ""s;
-    //     for (int i = 0; i < mask.size(); ++i) {
-    //         if (mask[i] == '1') s += source[i];
-    //     }
-    //     translations[translate(s)].insert(s);
-    // }
+        while (std::prev_permutation(mask.begin(), mask.end())) {
+            // TODO: When GCC 13 comes out, replace this with
+            // auto const s = mask
+            //     | std::views::zip(source) <- C++23 (GCC 13)
+            //     | std::views::filter([](auto t) { return std::get<0>(t) == '1;' })
+            //     | std::ranges::to<std::string>(); <- C++23 (GCC 13)
+            auto const s = std::inner_product(
+              mask.begin(),
+              mask.end(),
+              source.begin(),
+              ""s,
+              [](auto acc, auto p) {
+                  auto [keep, value] = p;
+                  return keep ? acc + value : acc;
+              },
+              [](auto flag, auto value) {
+                  return std::pair{flag == '1', value};
+              });
+            translations[translate(s)].insert(s);
+        }
+    }
 
-    // for (auto [k, v] : translations) { fmt::print("{}: {} {}\n", k, v.size(), v); }
+    for (auto [k, v] : translations) { fmt::print("{}: {} {}\n", k, v.size(), v); }
 }
