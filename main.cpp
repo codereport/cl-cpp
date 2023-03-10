@@ -66,7 +66,7 @@ auto create_mapping(std::string args, std::string_view rest)
         } else {
             auto const start = j;
             j                = find_end(j, rest) + 1;
-            mapping[args[i]] = rest.substr(start, j);
+            mapping[args[i]] = rest.substr(start, j - start);
         }
     }
 
@@ -109,7 +109,8 @@ auto translate(std::string_view spelling) -> std::string {
     auto const init_sub       = initial_substitution(pattern, mapping) + std::string{left_over};
     auto const final_sub      = remove_all_parens(init_sub);
 
-    // fmt::print("➡️ {}\n", sub);
+    // for (auto [k, v] : mapping) fmt::print("{}: {}\n", k, v);
+    // fmt::print("➡️ {}\n", final_sub);
 
     if (std::ranges::all_of(final_sub, _phi(::ispunct, _or_, ::islower))) return final_sub;
 
@@ -122,30 +123,11 @@ auto translate(std::string_view spelling) -> std::string {
     return translate(final_sub);
 }
 
-auto unit_test(char combinator, std::string_view input, std::string_view expected) {
-    auto const result  = translate(input);
-    auto const correct = result == expected;
-    fmt::print("{}: {} {} {} {}\n", (correct ? "✅" : "❌"), combinator, input, expected, result);
-}
-
-auto main() -> int {
-    fmt::print("Hello YouTube!\n");
-
-    unit_test('I', "SKK", "a");
-    unit_test('B', "S(KS)K", "a(bc)");
-    unit_test('H', "BBB", "a(bcd)");       // H will be the B1
-    unit_test('J', "B(BBB)B", "a(bcde)");  // J will be the B2
-    // unit_test("S", "ac(bc)");
-    // unit_test('W', "C(BMR)", "abb");
-    unit_test('C', "S(BBS)(KK)", "acb");
-    unit_test('D', "BB", "ab(cd)");
-
-    // TODO: make this more sophisticated
+auto generate_combinator_spellings() {
     auto translations = std::map<std::string, std::set<std::string>>{};
     auto const source = "BBSSKKCC"s;
 
-    // TODO: figure out what is wrong with i <= 5
-    for (size_t i = 2; i <= 4; ++i) {
+    for (size_t i = 2; i <= 5; ++i) {
         auto mask = std::string(i, '1') + std::string(source.size() - i, '0');
 
         while (std::prev_permutation(mask.begin(), mask.end())) {
@@ -171,4 +153,26 @@ auto main() -> int {
     }
 
     for (auto [k, v] : translations) { fmt::print("{}: {} {}\n", k, v.size(), v); }
+}
+
+auto unit_test(std::string combinator, std::string_view input, std::string_view expected) {
+    auto const result  = translate(input);
+    auto const correct = result == expected;
+    fmt::print("{}: {} {} {} {}\n", (correct ? "✅" : "❌"), combinator, input, expected, result);
+}
+
+auto main() -> int {
+    fmt::print("Hello YouTube!\n");
+
+    unit_test("I", "SKK", "a");
+    unit_test("B", "S(KS)K", "a(bc)");
+    unit_test("B₁", "BBB", "a(bcd)");
+    unit_test("B₂", "B(BBB)B", "a(bcde)");
+    unit_test("W", "C(BMR)", "abb");
+    unit_test("C", "S(BBS)(KK)", "acb");
+    unit_test("D", "BB", "ab(cd)");
+
+    generate_combinator_spellings();
+
+    return 0;
 }
