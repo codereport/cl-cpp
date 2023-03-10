@@ -146,10 +146,7 @@ auto generate_combinator_spellings() {
               mask.end(),
               source.begin(),
               ""s,
-              [](auto acc, auto p) {
-                  auto [keep, value] = p;
-                  return keep ? acc + value : acc;
-              },
+              [](auto acc, auto p) { return std::get<0>(p) ? acc + std::get<1>(p) : acc; },
               [](auto flag, auto value) {
                   return std::pair{flag == '1', value};
               });
