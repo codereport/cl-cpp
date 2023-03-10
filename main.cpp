@@ -109,9 +109,9 @@ auto translate_with_adjustment(std::string final_sub, int n) -> std::string {
 }
 
 auto translate(std::string_view spelling, int n) -> std::string {
+    if (n > 20) return "Inf";
     if (not dictionary.contains(spelling.front()))
         return "\nMissing from dictionary: "s + spelling.front() + "\n";
-    if (n > 20) return "Inf";
 
     auto const combinator      = spelling.front();
     auto const rest            = spelling.substr(1, spelling.size());
@@ -169,13 +169,15 @@ auto unit_test(std::string combinator, std::string_view input, std::string_view 
 auto main() -> int {
     fmt::print("Hello YouTube!\n");
 
-    unit_test("I", "SKK", "a");
-    unit_test("B", "S(KS)K", "a(bc)");
-    unit_test("B₁", "BBB", "a(bcd)");
-    unit_test("B₂", "B(BBB)B", "a(bcde)");
-    unit_test("W", "C(BMR)", "abb");
-    unit_test("C", "S(BBS)(KK)", "acb");
-    unit_test("D", "BB", "ab(cd)");
+    // clang-format off
+    unit_test("I",  "SKK",        "a");
+    unit_test("B",  "S(KS)K",     "a(bc)");
+    unit_test("B₁", "BBB",        "a(bcd)");
+    unit_test("B₂", "B(BBB)B",    "a(bcde)");
+    unit_test("W",  "C(BMR)",     "abb");
+    unit_test("C",  "S(BBS)(KK)", "acb");
+    unit_test("D",  "BB",         "ab(cd)");
+    // clang-format on
 
     generate_combinator_spellings();
 
