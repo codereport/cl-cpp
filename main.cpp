@@ -97,6 +97,17 @@ auto remove_all_parens(std::string sub) -> std::string {
     return sub;
 }
 
+auto translate(std::string_view spelling, int n) -> std::string;
+
+auto translate_with_adjustment(std::string final_sub, int n) -> std::string {
+    auto const it  = std::ranges::find_if(final_sub, _b(_not, ::islower));
+    auto const j   = static_cast<size_t>(std::distance(final_sub.begin(), it));
+    auto const i   = final_sub.find('(');
+    auto const end = i < j ? remove_parens(final_sub.substr(i, final_sub.size()), 0)
+                           : final_sub.substr(j, final_sub.size());
+    return final_sub.substr(0, i) + translate(end, n + 1);
+}
+
 auto translate(std::string_view spelling, int n) -> std::string {
     if (not dictionary.contains(spelling.front()))
         return "\nMissing from dictionary: "s + spelling.front() + "\n";
@@ -110,22 +121,14 @@ auto translate(std::string_view spelling, int n) -> std::string {
     auto [mapping, left_over] = create_mapping(args, rest);
     auto const init_sub       = initial_substitution(pattern, mapping) + std::string{left_over};
     auto const final_sub      = remove_all_parens(init_sub);
+    auto const done           = std::ranges::all_of(final_sub, _phi(::ispunct, _or_, ::islower));
 
     // for (auto [k, v] : mapping) fmt::print("{}: {}\n", k, v);
     // fmt::print("➡️ {}\n", final_sub);
 
-    if (std::ranges::all_of(final_sub, _phi(::ispunct, _or_, ::islower))) return final_sub;
-
-    if (islower(final_sub.front())) {
-        auto const it  = std::ranges::find_if(final_sub, _b(_not, ::islower));
-        auto const j   = static_cast<size_t>(std::distance(final_sub.begin(), it));
-        auto const i   = final_sub.find('(');
-        auto const end = i <= j ? remove_parens(final_sub.substr(i, final_sub.size()), 0)
-                                : final_sub.substr(j, final_sub.size());
-        return final_sub.substr(0, i) + translate(end, n + 1);
-    }
-
-    return translate(final_sub, n + 1);
+    return done                         ? final_sub
+           : islower(final_sub.front()) ? translate_with_adjustment(final_sub, n + 1)
+                                        : translate(final_sub, n + 1);
 }
 
 auto generate_combinator_spellings() {
