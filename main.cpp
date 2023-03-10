@@ -21,6 +21,8 @@ auto dictionary = std::map<char, std::string>  //
    {'S', "abc.ac(bc)"},
    {'B', "abc.a(bc)"},
    {'C', "abc.acb"},
+   {'H', "abcd.a(bcd)"},  // B1
+   {'W', "ab.abb"},
    {'R', "abc.bca"},
    {'M', "a.aa"}};
 
@@ -95,9 +97,10 @@ auto remove_all_parens(std::string sub) -> std::string {
     return sub;
 }
 
-auto translate(std::string_view spelling) -> std::string {
+auto translate(std::string_view spelling, int n) -> std::string {
     if (not dictionary.contains(spelling.front()))
-        return "Missing from dictionary: "s + spelling.front();
+        return "\nMissing from dictionary: "s + spelling.front() + "\n";
+    if (n > 20) return "Inf";
 
     auto const combinator      = spelling.front();
     auto const rest            = spelling.substr(1, spelling.size());
@@ -114,17 +117,20 @@ auto translate(std::string_view spelling) -> std::string {
     if (std::ranges::all_of(final_sub, _phi(::ispunct, _or_, ::islower))) return final_sub;
 
     if (islower(final_sub.front())) {
+        auto const it  = std::ranges::find_if(final_sub, _b(_not, ::islower));
+        auto const j   = static_cast<size_t>(std::distance(final_sub.begin(), it));
         auto const i   = final_sub.find('(');
-        auto const end = remove_parens(final_sub.substr(i, final_sub.size()), 0);
-        return final_sub.substr(0, i) + translate(end);
+        auto const end = i <= j ? remove_parens(final_sub.substr(i, final_sub.size()), 0)
+                                : final_sub.substr(j, final_sub.size());
+        return final_sub.substr(0, i) + translate(end, n + 1);
     }
 
-    return translate(final_sub);
+    return translate(final_sub, n + 1);
 }
 
 auto generate_combinator_spellings() {
     auto translations = std::map<std::string, std::set<std::string>>{};
-    auto const source = "BBSSKKCC"s;
+    auto const source = "BBSSKKCCWWHH"s;
 
     for (size_t i = 2; i <= 5; ++i) {
         auto mask = std::string(i, '1') + std::string(source.size() - i, '0');
@@ -147,7 +153,7 @@ auto generate_combinator_spellings() {
               [](auto flag, auto value) {
                   return std::pair{flag == '1', value};
               });
-            translations[translate(s)].insert(s);
+            translations[translate(s, 0)].insert(s);
         }
     }
 
@@ -155,7 +161,7 @@ auto generate_combinator_spellings() {
 }
 
 auto unit_test(std::string combinator, std::string_view input, std::string_view expected) {
-    auto const result  = translate(input);
+    auto const result  = translate(input, 0);
     auto const correct = result == expected;
     fmt::print("{}: {} {} {} {}\n", (correct ? "✅" : "❌"), combinator, input, expected, result);
 }
