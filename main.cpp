@@ -32,7 +32,7 @@ auto split(std::string s) -> std::pair<std::string, std::string> {
 }
 
 auto find_end(size_t j, std::string_view s) -> size_t {
-    int paren_count = 1.0;
+    int paren_count = 1;
     while (paren_count > 0) {
         ++j;
         if (s[j] == '(') ++paren_count;
