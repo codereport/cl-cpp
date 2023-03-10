@@ -40,7 +40,6 @@ auto find_end(size_t j, std::string_view s) -> size_t {
 }
 
 auto remove_parens(std::string s, size_t start) -> std::string {
-    // ASSERT first char is '(' a(bc)d)
     s.erase(s.begin() + start);
     auto const i = find_end(start, s);
     s.erase(s.begin() + i);
