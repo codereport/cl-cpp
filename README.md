@@ -4,6 +4,9 @@ This repo was coded via the livestreams linked below:
 
 * 1️⃣ [Combinatory Logic in C++](https://www.youtube.com/watch?v=Y0KKPYkeOTA)
 * 2️⃣ [Refactoring C++](https://www.youtube.com/watch?v=4rGxav_T7gs)
+* 3️⃣ [Combinatory Logic in C++ & Python (Part 2)](https://youtube.com/live/PMsJl8fxcOU)
+
+![image](https://user-images.githubusercontent.com/36027403/224514024-25b6d897-99a1-4e42-a4b2-ff6da3c3b095.png)
 
 Results from more recent run:
 ```
