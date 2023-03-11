@@ -11,7 +11,6 @@
 #include <combinators.hpp>
 
 using namespace combinators;
-
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
@@ -21,10 +20,25 @@ auto dictionary = std::map<char, std::string>  //
    {'S', "abc.ac(bc)"},
    {'B', "abc.a(bc)"},
    {'C', "abc.acb"},
-   {'H', "abcd.a(bcd)"},  // B1
+   {'H', "abcd.a(bcd)"},     // B₁
+   {'E', "abcde.a(bcde)"},   // B₂
+   {'Z', "ab.b"},            // KI (κ)
+   {'P', "abcd.a(bd)(cd)"},  // Φ
+   {'Q', "abcd.a(bc)(bd)"},  // Ψ
    {'W', "ab.abb"},
    {'R', "abc.bca"},
    {'M', "a.aa"}};
+
+auto use_correct_combinator_names(std::string s) -> std::string {
+    return std::accumulate(s.begin(), s.end(), ""s, [](auto acc, auto c) {
+        if (c == 'H') return acc + "B₁";
+        if (c == 'E') return acc + "B₂";
+        if (c == 'P') return acc + "Φ";
+        if (c == 'Q') return acc + "Ψ";
+        if (c == 'Z') return acc + "κ";
+        return acc + c;
+    });
+}
 
 auto split(std::string s) -> std::pair<std::string, std::string> {
     auto const i = s.find(".");
@@ -84,23 +98,19 @@ auto initial_substitution(std::string_view pattern, mapping_t& mapping) -> std::
 
 auto remove_all_parens(std::string sub) -> std::string {
     while (sub.front() == '(') { sub = remove_parens(sub, 0); }
-
-    // double left paren
-    auto dlp = [](auto& s) { return std::ranges::adjacent_find(s, _psi(_and_, _eq('('))); };
-
-    auto it = dlp(sub);
+    auto double_left = [](auto& s) { return std::ranges::adjacent_find(s, _psi(_and_, _eq('('))); };
+    auto it          = double_left(sub);
     while (it != sub.end()) {
         sub = remove_parens(sub, std::distance(sub.begin(), it));
-        it  = dlp(sub);
+        it  = double_left(sub);
     }
-
     return sub;
 }
 
 auto translate(std::string_view spelling, int n) -> std::string;
 
 auto translate_with_adjustment(std::string final_sub, int n) -> std::string {
-    auto const it  = std::ranges::find_if(final_sub, _b(_not, ::islower));
+    auto const it  = std::ranges::find_if(final_sub, ::isupper);
     auto const j   = static_cast<size_t>(std::distance(final_sub.begin(), it));
     auto const i   = final_sub.find('(');
     auto const end = i < j ? remove_parens(final_sub.substr(i, final_sub.size()), 0)
@@ -133,18 +143,18 @@ auto translate(std::string_view spelling, int n) -> std::string {
 
 auto generate_combinator_spellings() {
     auto translations = std::map<std::string, std::set<std::string>>{};
-    auto const source = "BBSSKKCCWWHH"s;
+    auto const source = "BBBBCCHHKKPSSWWZZ"s;
 
-    for (size_t i = 2; i <= 5; ++i) {
+    for (size_t i = 2; i <= 4; ++i) {
         auto mask = std::string(i, '1') + std::string(source.size() - i, '0');
 
-        while (std::prev_permutation(mask.begin(), mask.end())) {
+        do {
             // TODO: When GCC 13 comes out, replace this with
             // auto const s = mask
             //     | std::views::zip(source) <- C++23 (GCC 13)
             //     | std::views::filter([](auto t) { return std::get<0>(t) == '1;' })
             //     | std::ranges::to<std::string>(); <- C++23 (GCC 13)
-            auto const s = std::inner_product(
+            auto s = std::inner_product(
               mask.begin(),
               mask.end(),
               source.begin(),
@@ -153,18 +163,50 @@ auto generate_combinator_spellings() {
               [](auto flag, auto value) {
                   return std::pair{flag == '1', value};
               });
-            translations[translate(s, 0)].insert(s);
-        }
+
+            do {
+                for (size_t j = 1; j + 2 < i; ++j) {
+                    for (size_t k = j + 2; k <= i; ++k) {
+                        auto t = s;
+                        t.insert(t.begin() + j, '(');
+                        t.insert(t.begin() + k + 1, ')');
+                        translations[translate(t, 0)].insert(t);
+                    }
+                }
+
+                translations[translate(s, 0)].insert(s);
+            } while ((std::next_permutation(s.begin(), s.end())));
+        } while ((std::prev_permutation(mask.begin(), mask.end())));
     }
 
-    for (auto [k, v] : translations) { fmt::print("{}: {} {}\n", k, v.size(), v); }
+    // for (auto [k, v] : translations) { fmt::print("{}: {} {}\n", k, v.size(), v); }
+
+    for (auto [combinator, fn_abstract] : dictionary) {
+        auto const& set = translations[split(fn_abstract).second];
+        auto show       = std::vector<std::string>{};
+        for (auto spelling : set)
+            if (not spelling.contains(combinator) and not spelling.starts_with("K("))
+                show.push_back(use_correct_combinator_names(spelling));
+        std::ranges::sort(show, [](auto l, auto r) { return l.size() < r.size(); });
+        show.resize(std::min(show.size(), 10uz));
+        fmt::print("{}: {}\n", use_correct_combinator_names(std::string{combinator}), show);
+    }
 }
 
 auto unit_test(std::string combinator, std::string_view input, std::string_view expected) {
     auto const result  = translate(input, 0);
     auto const correct = result == expected;
-    fmt::print("{}: {} {} {} {}\n", (correct ? "✅" : "❌"), combinator, input, expected, result);
+    fmt::print("{}: {} {} {} {}\n",
+               (correct ? "✅" : "❌"),
+               combinator,
+               use_correct_combinator_names(std::string{input}),
+               expected,
+               result);
 }
+
+// TODO:
+// - update CL website
+// - add plgraph-like thing
 
 auto main() -> int {
     fmt::print("Hello YouTube!\n");
@@ -177,6 +219,7 @@ auto main() -> int {
     unit_test("W",  "C(BMR)",     "abb");
     unit_test("C",  "S(BBS)(KK)", "acb");
     unit_test("D",  "BB",         "ab(cd)");
+    unit_test("Φ",  "HSB",        "a(bd)(cd)");
     // clang-format on
 
     generate_combinator_spellings();
