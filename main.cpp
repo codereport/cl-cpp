@@ -20,11 +20,15 @@ auto dictionary = std::map<char, std::string>  //
    {'S', "abc.ac(bc)"},
    {'B', "abc.a(bc)"},
    {'C', "abc.acb"},
+   {'D', "abcd.ab(cd)"},
    {'H', "abcd.a(bcd)"},     // B₁
    {'E', "abcde.a(bcde)"},   // B₂
+   {'F', "abcd.a(b(cd))"},   // B₃
    {'Z', "ab.b"},            // KI (κ)
    {'P', "abcd.a(bd)(cd)"},  // Φ
    {'Q', "abcd.a(bc)(bd)"},  // Ψ
+   {'Y', "abcde.abc(de)"},
+   {'X', "abcde.a(bc)(de)"},
    {'W', "ab.abb"},
    {'R', "abc.bca"},
    {'M', "a.aa"}};
@@ -32,10 +36,13 @@ auto dictionary = std::map<char, std::string>  //
 auto use_correct_combinator_names(std::string s) -> std::string {
     return std::accumulate(s.begin(), s.end(), ""s, [](auto acc, auto c) {
         if (c == 'H') return acc + "B₁";
+        if (c == 'Y') return acc + "D₁";
         if (c == 'E') return acc + "B₂";
+        if (c == 'X') return acc + "D₂";
         if (c == 'P') return acc + "Φ";
         if (c == 'Q') return acc + "Ψ";
         if (c == 'Z') return acc + "κ";
+        if (c == 'F') return acc + "B₃";
         return acc + c;
     });
 }
@@ -143,7 +150,7 @@ auto translate(std::string_view spelling, int n) -> std::string {
 
 auto generate_combinator_spellings() {
     auto translations = std::map<std::string, std::set<std::string>>{};
-    auto const source = "BBBBCCHHKKPSSWWZZ"s;
+    auto const source = "BBBBCCDDHHKKPSSWWZZ"s;
 
     for (size_t i = 2; i <= 4; ++i) {
         auto mask = std::string(i, '1') + std::string(source.size() - i, '0');
@@ -205,8 +212,7 @@ auto unit_test(std::string combinator, std::string_view input, std::string_view 
 }
 
 // TODO:
-// - update CL website
-// - add plgraph-like thing
+// - make code multithreaded?
 
 auto main() -> int {
     fmt::print("Hello YouTube!\n");
@@ -220,6 +226,7 @@ auto main() -> int {
     unit_test("C",  "S(BBS)(KK)", "acb");
     unit_test("D",  "BB",         "ab(cd)");
     unit_test("Φ",  "HSB",        "a(bd)(cd)");
+    unit_test("S",  "PI",         "ac(bc)");
     // clang-format on
 
     generate_combinator_spellings();
