@@ -14,7 +14,11 @@ combinators = {
     'B₂' : ['D', 'B₁'],
     'B₃' : ['B', 'D'],
     'Ψ'  : ['B', 'S', 'Φ', 'C'], 
-    'D₁' : ['B', 'D']
+    'D₁' : ['B', 'D'],
+    'D₂' : ['D'],
+    'E'  : ['B', 'B₁'],
+    'Φ₁' : ['B', 'Φ'],
+    'Ê'  : ['D₂', 'D']
 }
 
 dot = gv.Digraph('combinator-graph', format = 'png')

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <map>
 #include <numeric>
+#include <ranges>
 #include <set>
 #include <string>
 #include <string_view>
@@ -21,28 +22,33 @@ auto dictionary = std::map<char, std::string>  //
    {'B', "abc.a(bc)"},
    {'C', "abc.acb"},
    {'D', "abcd.ab(cd)"},
-   {'H', "abcd.a(bcd)"},     // B₁
-   {'E', "abcde.a(bcde)"},   // B₂
-   {'F', "abcd.a(b(cd))"},   // B₃
-   {'Z', "ab.b"},            // KI (κ)
-   {'P', "abcd.a(bd)(cd)"},  // Φ
-   {'Q', "abcd.a(bc)(bd)"},  // Ψ
+   {'H', "abcd.a(bcd)"},          // B₁
+   {'Q', "abcde.a(bcde)"},        // B₂
+   {'F', "abcd.a(b(cd))"},        // B₃
+   {'Z', "ab.b"},                 // KI (κ)
+   {'P', "abcd.a(bd)(cd)"},       // Φ
+   {'Q', "abcd.a(bc)(bd)"},       // Ψ
+   {'U', "abcde.a(bde)(cde)"},    // Φ₁
+   {'V', "abcdefg.a(bcd)(efg)"},  // Ê
    {'Y', "abcde.abc(de)"},
    {'X', "abcde.a(bc)(de)"},
    {'W', "ab.abb"},
    {'R', "abc.bca"},
-   {'M', "a.aa"}};
+   {'M', "a.aa"},
+   {'E', "abcde.ab(cde)"}};
 
 auto use_correct_combinator_names(std::string s) -> std::string {
     return std::accumulate(s.begin(), s.end(), ""s, [](auto acc, auto c) {
         if (c == 'H') return acc + "B₁";
         if (c == 'Y') return acc + "D₁";
-        if (c == 'E') return acc + "B₂";
+        if (c == 'Q') return acc + "B₂";
         if (c == 'X') return acc + "D₂";
         if (c == 'P') return acc + "Φ";
         if (c == 'Q') return acc + "Ψ";
         if (c == 'Z') return acc + "κ";
         if (c == 'F') return acc + "B₃";
+        if (c == 'U') return acc + "Φ₁";
+        if (c == 'V') return acc + "Ê";
         return acc + c;
     });
 }
@@ -150,7 +156,7 @@ auto translate(std::string_view spelling, int n) -> std::string {
 
 auto generate_combinator_spellings() {
     auto translations = std::map<std::string, std::set<std::string>>{};
-    auto const source = "BBBBCCDDHHKKPSSWWZZ"s;
+    auto const source = "BBBBCCDDFFHHKKPPQQSSWWXXYYZZ"s;
 
     for (size_t i = 2; i <= 4; ++i) {
         auto mask = std::string(i, '1') + std::string(source.size() - i, '0');
@@ -193,10 +199,12 @@ auto generate_combinator_spellings() {
         auto show       = std::vector<std::string>{};
         for (auto spelling : set)
             if (not spelling.contains(combinator) and not spelling.starts_with("K("))
-                show.push_back(use_correct_combinator_names(spelling));
+                show.push_back(spelling);
         std::ranges::sort(show, [](auto l, auto r) { return l.size() < r.size(); });
         show.resize(std::min(show.size(), 10uz));
-        fmt::print("{}: {}\n", use_correct_combinator_names(std::string{combinator}), show);
+        fmt::print("{}: {}\n",
+                   use_correct_combinator_names(std::string{combinator}),
+                   show | std::views::transform(use_correct_combinator_names));
     }
 }
 
