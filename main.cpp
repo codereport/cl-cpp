@@ -142,7 +142,7 @@ auto translate(std::string_view spelling, int n) -> std::string {
     auto const [args, pattern] = split(fn_abstract);
 
     auto [mapping, left_over] = create_mapping(args, rest);
-    auto const init_sub       = initial_substitution(pattern, mapping) + std::string{left_over};
+    auto const init_sub       = initial_substitution(pattern, mapping).append(left_over);
     auto const final_sub      = remove_all_parens(init_sub);
     auto const done           = std::ranges::all_of(final_sub, _phi(::ispunct, _or_, ::islower));
 
