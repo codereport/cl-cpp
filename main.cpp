@@ -164,9 +164,9 @@ auto generate_combinator_spellings() {
         auto mask = std::string(i, '1') + std::string(source.size() - i, '0');
 
         do {
-            auto s = std::views::zip(mask, source)                                       //
-                     | std::views::filter([](auto t) { return std::get<0>(t) == '1'; })  //
-                     | std::views::values                                                //
+            auto s = std::views::zip(mask, source)             //
+                     | std::views::filter(_b(_eq('1'), _fst))  //
+                     | std::views::values                      //
                      | ranges::to<std::string>;
 
             do {
