@@ -9,6 +9,8 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
+#include <range/v3/range/conversion.hpp>
+
 #include <combinators.hpp>
 
 using namespace combinators;
@@ -162,20 +164,10 @@ auto generate_combinator_spellings() {
         auto mask = std::string(i, '1') + std::string(source.size() - i, '0');
 
         do {
-            // TODO: When GCC 13 comes out, replace this with
-            // auto const s = mask
-            //     | std::views::zip(source) <- C++23 (GCC 13)
-            //     | std::views::filter([](auto t) { return std::get<0>(t) == '1;' })
-            //     | std::ranges::to<std::string>(); <- C++23 (GCC 13)
-            auto s = std::inner_product(
-              mask.begin(),
-              mask.end(),
-              source.begin(),
-              ""s,
-              [](auto acc, auto p) { return std::get<0>(p) ? acc + std::get<1>(p) : acc; },
-              [](auto flag, auto value) {
-                  return std::pair{flag == '1', value};
-              });
+            auto s = std::views::zip(mask, source)                                       //
+                     | std::views::filter([](auto t) { return std::get<0>(t) == '1'; })  //
+                     | std::views::values                                                //
+                     | ranges::to<std::string>;
 
             do {
                 for (size_t j = 1; j + 2 < i; ++j) {
