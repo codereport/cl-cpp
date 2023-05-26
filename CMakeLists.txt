@@ -30,6 +30,22 @@ if(NOT blackbird_POPULATED)
   add_subdirectory(${blackbird_SOURCE_DIR} ${blackbird_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+# --- Fetch range-v3 ------------------------------------------------------------
+
+FetchContent_Declare(range-v3
+  GIT_REPOSITORY https://github.com/ericniebler/range-v3
+  # GIT_TAG v0.12.0
+)
+
+FetchContent_GetProperties(range-v3)
+if(NOT range-v3_POPULATED)
+  FetchContent_Populate(range-v3)
+  add_subdirectory(${range-v3_SOURCE_DIR} ${range-v3_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
+FetchContent_MakeAvailable(range-v3)
+
+
 # ------------------------------------------------------------------------------
 
 project(cl-cpp
@@ -45,7 +61,7 @@ target_include_directories(cl-cpp PRIVATE src)
 include_directories(${blackbird_SOURCE_DIR})
 
 target_link_libraries(cl-cpp
-#   PRIVATE range-v3
+  PRIVATE range-v3
   PRIVATE fmt
 )
 
